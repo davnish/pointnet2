@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
-from model import Pointnet2Seg
+from model import Pointnet2Seg, PointnetSeg
 from dataset import Dales
 import time
 from sklearn.metrics import accuracy_score, balanced_accuracy_score
@@ -90,6 +90,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type = int,default = batch_size)
     parser.add_argument('--points_taken', type = int, default = points_taken)
     parser.add_argument('--grid_size', type = int, default = grid_size)
+    parser.add_argument('--model', type = str, default = 'pointnet2')
 
 
     args = parser.parse_args()
@@ -100,7 +101,7 @@ if __name__ == '__main__':
 
     # Starting timer
     start = time.time()
-    
+
     # Splitting the data
     _dales = Dales(device, args.grid_size, args.points_taken, partition='train')
     print("File Read Complete")
@@ -111,7 +112,8 @@ if __name__ == '__main__':
     test_loader = DataLoader(test_dataset, batch_size = args.batch_size, shuffle = False, drop_last=True)
 
     # Initialize the model
-    model = Pointnet2Seg()
+    model = {'pointnet2': Pointnet2Seg, 'pointnet': PointnetSeg}
+    model = model[args.model]()
 
     # loss, Optimizer, Scheduler
     loss_fn = nn.CrossEntropyLoss()
@@ -130,15 +132,11 @@ if __name__ == '__main__':
             val_loss, val_acc, bal_val_acc, _ = test_loop(test_loader, loss_fn, model, device)
             print(f'Epoch {_epoch} | lr: {scheduler.get_last_lr()}:\n train_loss: {train_loss:.4f} | train_acc: {train_acc:.4f} | bal_train_acc: {bal_avg_acc:.4f}\n val_loss: {val_loss:.4f} | val_acc: {val_acc:.4f} | bal_val_acc: {bal_val_acc:.4f}')
         
-
-
-        # break
-        
     end = time.time()
 
     print(f'Total_time: {end-start}')
 
     if not os.path.exists(os.path.join("model", "best")):
         os.makedirs(os.path.join("model", "best"))
-    torch.save(model.state_dict(), os.path.join("model", "best", f"model_{args.model_name}.pt"))
+    torch.save(model.state_dict(), os.path.join("model", "best", f"{args.model}_{args.grid_size}_{args.points_taken}_{args.model_name}.pt"))
     print(f"Model Saved at {args.epoch} epochs, named: model_{args.model_name}")
