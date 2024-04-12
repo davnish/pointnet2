@@ -32,7 +32,7 @@ def visualize_model(model_name):
     label = tiles['y'].reshape(-1)
     model = PointTransformerSeg().to('cuda')
 
-    model.load_state_dict(torch.load(os.path.join("model", "checkpoint", f"model_{model_name}.pt")))
+    model.load_state_dict(torch.load(os.path.join("model", "checkpoint", f"{model_name}.pt")))
     loss_fn = nn.CrossEntropyLoss()
     _,acc,bal_acc,preds = test_loop(loader, loss_fn, model, 'cuda')
     print(f'{acc=}')
