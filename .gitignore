@@ -1,0 +1,9 @@
+data/
+tempCodeRunnerFile.py
+seg/
+cls/
+__pycache__/
+.DS_Store
+attention_sample.py
+basic.py
+basic2.py
