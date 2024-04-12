@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
-from model import PointTransformerSeg
+from model import Pointnet2Seg
 from dataset import Dales
 import time
 from sklearn.metrics import accuracy_score, balanced_accuracy_score
@@ -108,10 +108,7 @@ if __name__ == '__main__':
     test_loader = DataLoader(test_dataset, batch_size = args.batch_size, shuffle = False, drop_last=True)
 
     # Initialize the model
-    # model = pct(n_embd, n_heads, n_layers)
-    # model = pct(64)
-    # model = mlp(3, 8)
-    model = PointTransformerSeg()
+    model = Pointnet2Seg()
 
     # loss, Optimizer, Scheduler
     loss_fn = nn.CrossEntropyLoss()
@@ -141,5 +138,5 @@ if __name__ == '__main__':
 
     if not os.path.exists(os.path.join("model", "best")):
         os.makedirs(os.path.join("model", "best"))
-    torch.save(model.state_dict(), os.path.join("model", "checkpoint", f"model_{args.model_name}.pt"))
+    torch.save(model.state_dict(), os.path.join("model", "best", f"model_{args.model_name}.pt"))
     print(f"Model Saved at {args.epoch} epochs, named: model_{args.model_name}")

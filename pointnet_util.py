@@ -10,7 +10,6 @@ class Local_op(nn.Module):
         self.bn1 = nn.BatchNorm1d(out_channels)
         self.bn2 = nn.BatchNorm1d(out_channels)
 
-
         self.relu = nn.ReLU()
 
     def forward(self, x):
@@ -102,7 +101,7 @@ def query_ball_point(radius, nsample, xyz, new_xyz):
     return group_idx
 
 def sample_and_group(npoint, nsample, xyz, points):
-    '''
+    """
     inputs:
     npoint: no of points to sample, int
     nsample: no of points to consider while considering the distance
@@ -112,19 +111,23 @@ def sample_and_group(npoint, nsample, xyz, points):
     output:
     new_xyz: [B, npoint, C(coords shape)]
     new_points: [B, npoint, nsample, 2C]
-    '''
+    """
     B, N, C = xyz.shape
     S = npoint 
     
     fps_idx = farthest_point_sample(xyz, npoint) # [B, npoint]
 
     new_xyz = index_points(xyz, fps_idx) # Gives the coords of fps_idx [B, S, C] where is the sampled points S=npoint
-    new_points = index_points(points, fps_idx)
+    new_points = index_points(points, fps_idx) # B, npoint, C(embedding shape)
 
+    ###### This can be replaced by query ball
     dists = square_distance(new_xyz, xyz)  # B x npoint x N
     idx = dists.argsort()[:, :, :nsample]  # B x npoint x K
+    ######
 
-    grouped_points = index_points(points, idx)
+    # idx = query_ball_point(radius=1, nsample=nsample, xyz=xyz, new_xyz=new_xyz)
+
+    grouped_points = index_points(points, idx) # B, npoint, K, C(embedding shape)
     grouped_points_norm = grouped_points - new_points.view(B, S, 1, -1)
     # print(grouped_points.size())
     new_points = torch.cat([grouped_points_norm, new_points.view(B, S, 1, -1).repeat(1, 1, nsample, 1)], dim=-1)

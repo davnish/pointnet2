@@ -1,1 +1,1 @@
-python main.py --epoch 500 --lr 0.0001 --step_size 100 --points_taken 4096 --batch_size 16 --grid_size 25 --model_name 13
+python main.py --epoch 100 --lr 0.0001 --step_size 50 --points_taken 4096 --batch_size 8 --grid_size 25 --model_name 1
