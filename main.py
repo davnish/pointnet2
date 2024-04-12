@@ -98,6 +98,9 @@ if __name__ == '__main__':
     # Setting Device
     device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
 
+    # Starting timer
+    start = time.time()
+    
     # Splitting the data
     _dales = Dales(device, args.grid_size, args.points_taken, partition='train')
     print("File Read Complete")
@@ -120,7 +123,6 @@ if __name__ == '__main__':
 
     print("Running Epochs")
     print(f'{device = }, {args.grid_size = }, {args.points_taken = }, {args.epoch = }, {n_embd = }, {args.batch_size = }, {args.lr = }')
-    start = time.time()
     for _epoch in range(1, args.epoch+1): 
         train_loss, train_acc, bal_avg_acc = train_loop(train_loader)
         scheduler.step()
