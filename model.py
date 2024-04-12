@@ -11,7 +11,7 @@ class PointnetCls(nn.Module):
     def __init__(self, n_embd, dropout):
         _input = 3
         classes = 40
-        super(pointnetcls, self).__init__()
+        super(PointnetCls, self).__init__()
         self.conv1 = nn.Conv1d(_input, 64, kernel_size=1)
         self.conv2 = nn.Conv1d(64, 128, kernel_size=1)
         self.conv3 = nn.Conv1d(128, 1024, kernel_size=1)
@@ -53,7 +53,7 @@ class PointnetCls(nn.Module):
     
 class PointnetSeg(nn.Module):
     def __init__(self, n_embd=64, dropout=0.2):
-        super(pointnet_seg, self).__init__()
+        super(PointnetSeg, self).__init__()
         self.conv1 = nn.Conv1d(3, 64, kernel_size=1)
         self.conv2 = nn.Conv1d(64, 128, kernel_size=1)
         self.conv3 = nn.Conv1d(128, 1024, kernel_size=1)
