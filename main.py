@@ -139,4 +139,4 @@ if __name__ == '__main__':
     if not os.path.exists(os.path.join("model", "best")):
         os.makedirs(os.path.join("model", "best"))
     torch.save(model.state_dict(), os.path.join("model", "best", f"{args.model}_{args.grid_size}_{args.points_taken}_{args.model_name}.pt"))
-    print(f"Model Saved at {args.epoch} epochs, named: model_{args.model_name}")
+    print(f"Model Saved at {args.epoch} epochs, named: {args.model}_{args.grid_size}_{args.points_taken}_{args.model_name}.pt")

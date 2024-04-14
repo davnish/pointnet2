@@ -100,12 +100,12 @@ def query_ball_point(radius, nsample, xyz, new_xyz):
     group_idx[mask] = group_first[mask]
     return group_idx
 
-def sample_and_group(npoint, nsample, xyz, points):
+def sample_and_group(npoint, nsample, xyz, points, radius=2):
     """
     inputs:
     npoint: no of points to sample, int
     nsample: no of points to consider while considering the distance
-    xyz: points coords, [B, N, C(coods)]
+    xyz: points coords, [B, N, C(cords)]
     points: Embeddings [B, N, C(embdding shape)]
 
     output:
@@ -120,12 +120,12 @@ def sample_and_group(npoint, nsample, xyz, points):
     new_xyz = index_points(xyz, fps_idx) # Gives the coords of fps_idx [B, S, C] where is the sampled points S=npoint
     new_points = index_points(points, fps_idx) # B, npoint, C(embedding shape)
 
-    ###### This can be replaced by query ball
-    dists = square_distance(new_xyz, xyz)  # B x npoint x N
-    idx = dists.argsort()[:, :, :nsample]  # B x npoint x K
-    ######
+    # ###### This can be replaced by query ball
+    # dists = square_distance(new_xyz, xyz)  # B x npoint x N
+    # idx = dists.argsort()[:, :, :nsample]  # B x npoint x K
+    # ######
 
-    # idx = query_ball_point(radius=1, nsample=nsample, xyz=xyz, new_xyz=new_xyz)
+    idx = query_ball_point(radius=radius, nsample=nsample, xyz=xyz, new_xyz=new_xyz)
 
     grouped_points = index_points(points, idx) # B, npoint, K, C(embedding shape)
     grouped_points_norm = grouped_points - new_points.view(B, S, 1, -1)
@@ -240,11 +240,14 @@ class PointNetFeaturePropagation(nn.Module):
 
 
 if __name__ == "__main__":
-    a = torch.rand(2, 400, 10)
-    axyz = torch.rand(2, 3, 10)
-    b = torch.rand(2,200, 5)
+    a = torch.rand(2, 400, 10) # B, C, N
+    axyz = torch.rand(2, 3, 10)# B, C, N
+    b = torch.rand(2,200, 5) # B, C', N
     bxyz = torch.rand(2, 3, 5)
 
-    fp = PointNetFeaturePropagation(in_channel=600, mlp=[300])
+    fp = PointNetFeaturePropagation(in_channel=600, mlp=[300]) # in_channel = C+C'
     xyz, points = fp(axyz, bxyz, a, b)
     print(xyz.shape, points.shape)
+
+    grouped_idx, grouped_points = sample_and_group(npoint=5, nsample=3, xyz=axyz.permute(0,2,1), points=a.permute(0,2,1))
+    print(grouped_idx.size(), grouped_points.size())
