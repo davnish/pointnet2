@@ -231,12 +231,13 @@ class Pointnet2Seg(nn.Module):
         self.gather_local_0 = Local_op(in_channels=128, out_channels=128)
         self.gather_local_1 = Local_op(in_channels=256, out_channels=256)
 
-        self.featureProp_0 = PointNetFeaturePropagation(in_channel=256+128, mlp=[256, 512])
-        self.featureProp_1 = PointNetFeaturePropagation(in_channel=512+64, mlp=[512, 1024])
+        self.featureProp_0 = PointNetFeaturePropagation(in_channel=256+128, mlp=[256, 512]) # With skip connections
+        self.featureProp_1 = PointNetFeaturePropagation(in_channel=512+64, mlp=[512, 1024]) # With skip connections
 
 
         self.conv1 = nn.Conv1d(1024, 512, kernel_size=1)
         self.bn1 = nn.BatchNorm1d(512)
+        self.dp1 = nn.Dropout(p=0.5)
         
         self.conv2 = nn.Conv1d(512, 128, kernel_size=1)
         self.bn2 = nn.BatchNorm1d(128)

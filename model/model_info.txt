@@ -1,2 +1,4 @@
-pointnet2_25_4096_2 : without query ball, 600 epochs, model overfitted need to add some regularization, and also without skip connections
-poitnnet2_25_4096_3 : with query ball, 200 epochs, will add skip connections and droupout after this
+pointnet2_25_4096_2 : without query ball, 600 epochs, model overfitted need to add some regularization
+poitnnet2_25_4096_3 : with query ball, 200 epochs, droupout after this
+
+pointnet_25_4096_2  : 600 epochs, model is overfitted
