@@ -115,7 +115,7 @@ if __name__ == '__main__':
     # Initialize the model
     model = {'pointnet2': Pointnet2Seg, 'pointnet': PointnetSeg}
 
-    model =  model[args.model]() if args.model == 'pointnet' else model[args.model](args.radius)
+    model =  model[args.model]() if args.model == 'pointnet' else model[args.model](radius = args.radius)
 
     # loss, Optimizer, Scheduler
     loss_fn = nn.CrossEntropyLoss()
