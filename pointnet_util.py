@@ -100,7 +100,7 @@ def query_ball_point(radius, nsample, xyz, new_xyz):
     group_idx[mask] = group_first[mask]
     return group_idx
 
-def sample_and_group(npoint, nsample, xyz, points, radius=2):
+def sample_and_group(npoint, nsample, xyz, points, radius=1):
     """
     inputs:
     npoint: no of points to sample, int
@@ -120,12 +120,12 @@ def sample_and_group(npoint, nsample, xyz, points, radius=2):
     new_xyz = index_points(xyz, fps_idx) # Gives the coords of fps_idx [B, S, C] where is the sampled points S=npoint
     new_points = index_points(points, fps_idx) # B, npoint, C(embedding shape)
 
-    ###### This can be replaced by query ball
-    dists = square_distance(new_xyz, xyz)  # B x npoint x N
-    idx = dists.argsort()[:, :, :nsample]  # B x npoint x K
-    ######
+    # ###### This can be replaced by query ball
+    # dists = square_distance(new_xyz, xyz)  # B x npoint x N
+    # idx = dists.argsort()[:, :, :nsample]  # B x npoint x K
+    # ######
 
-    # idx = query_ball_point(radius=radius, nsample=nsample, xyz=xyz, new_xyz=new_xyz)
+    idx = query_ball_point(radius=radius, nsample=nsample, xyz=xyz, new_xyz=new_xyz)
 
     grouped_points = index_points(points, idx) # B, npoint, K, C(embedding shape)
     grouped_points_norm = grouped_points - new_points.view(B, S, 1, -1)
@@ -235,7 +235,7 @@ class PointNetFeaturePropagation(nn.Module):
             new_points = self.relu(bn(conv(new_points)))
             if self.drp_add:
                 new_points = self.mlp_drp[i](new_points)
-                
+
         return new_points
 
 

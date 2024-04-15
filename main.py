@@ -91,6 +91,7 @@ if __name__ == '__main__':
     parser.add_argument('--points_taken', type = int, default = points_taken)
     parser.add_argument('--grid_size', type = int, default = grid_size)
     parser.add_argument('--model', type = str, default = 'pointnet2')
+    parser.add_argument('--radius', type = int, default = 1)
 
 
     args = parser.parse_args()
@@ -113,7 +114,8 @@ if __name__ == '__main__':
 
     # Initialize the model
     model = {'pointnet2': Pointnet2Seg, 'pointnet': PointnetSeg}
-    model = model[args.model]()
+
+    model =  model[args.model]() if args.model == 'pointnet' else model[args.model](args.radius)
 
     # loss, Optimizer, Scheduler
     loss_fn = nn.CrossEntropyLoss()
@@ -124,7 +126,7 @@ if __name__ == '__main__':
 
 
     print("Running Epochs")
-    print(f'{device = }, {args.grid_size = }, {args.points_taken = }, {args.epoch = }, {n_embd = }, {args.batch_size = }, {args.lr = }')
+    print(f'{device = }, {args.grid_size = }, {args.points_taken = }, {args.epoch = }, {n_embd = }, {args.batch_size = }, {args.lr = }, {args.step_size = }, {args.radius}')
     for _epoch in range(1, args.epoch+1): 
         train_loss, train_acc, bal_avg_acc = train_loop(train_loader)
         scheduler.step()

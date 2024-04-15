@@ -221,8 +221,9 @@ class Pointnet2Cls(nn.Module):
         return x
     
 class Pointnet2Seg(nn.Module):
-    def __init__(self, in_channels = 3, labels=8):
+    def __init__(self, in_channels = 3, labels=8, radius = 1):
         super(Pointnet2Seg, self).__init__()
+        self.radius = radius
         self.emb1 = nn.Conv1d(in_channels, 64, kernel_size=1)
         self.emb2 = nn.Conv1d(64, 64, kernel_size=1)
         self.emb1_bn = nn.BatchNorm1d(64)
@@ -252,10 +253,10 @@ class Pointnet2Seg(nn.Module):
         x = F.relu(self.emb1_bn(self.emb1(x)))
         x = F.relu(self.emb2_bn(self.emb2(x)))
         features0 = x
-        xyz1, features1 = sample_and_group(npoint=2048, nsample=32, xyz = xyz, points=x.permute(0, 2, 1))
+        xyz1, features1 = sample_and_group(npoint=2048, nsample=32, xyz = xyz, points=x.permute(0, 2, 1), radius = self.radius)
         features1 = self.gather_local_0(features1)
 
-        xyz2, features2 = sample_and_group(npoint=1024, nsample=32, xyz = xyz1, points=features1.permute(0, 2, 1))
+        xyz2, features2 = sample_and_group(npoint=1024, nsample=32, xyz = xyz1, points=features1.permute(0, 2, 1), radius = self.radius)
         x = self.gather_local_1(features2)
 
         x = self.featureProp_0(xyz1 = xyz1.transpose(1,2), xyz2 = xyz2.transpose(1,2), points1=features1, points2=x)

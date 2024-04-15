@@ -1,4 +1,7 @@
 pointnet2_25_4096_2 : without query ball, 600 epochs, model overfitted need to add some regularization
 poitnnet2_25_4096_3 : with query ball, 200 epochs, droupout after this
+pointnet2_25_4096_4 : with query ball, 200 epochs, radius = 3
+pointnet2_25_4096_5 : with query ball, 200 epochs, radius = 1
 
 pointnet_25_4096_2  : 600 epochs, model is overfitted
+pointnet_25_4096_3  : 200 epochs, step_size reduced from 100 to 50 gave bad results
