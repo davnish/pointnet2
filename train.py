@@ -1,12 +1,13 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
-from model import Pointnet2Seg, PointnetSeg
 from dataset import Dales
 import time
 from sklearn.metrics import accuracy_score, balanced_accuracy_score
 import argparse
 import os
+from pointnet2 import Pointnet2Seg
+from pointnet import PointnetSeg
 torch.manual_seed(42)
 
 #Training the model
@@ -66,32 +67,19 @@ def test_loop(loader, loss_fn, model, device):
 
 if __name__ == '__main__':
 
-    # Hyperparameter----
-
-    grid_size = 25 # The size of the grid from 500mx500m 
-    points_taken = 4096 # Points taken per each grid 
-    batch_size = 8
-    lr = 1e-4
-    epoch = 100
     eval_train_test = 10
-    n_embd = 64
-    step_size = 50 # Reduction of Learning at how many epochs
     batch_eval_inter = 100
-    dropout = 0.3
-    # eval_test = 10
-
-    # ------------------
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('--lr', type = float, default= lr)
-    parser.add_argument('--epoch', type = int, default = epoch)
-    parser.add_argument('--step_size', type = int, default = step_size)
+    parser.add_argument('--lr', type = float, default= 1e-4)
+    parser.add_argument('--epoch', type = int, default = 100)
+    parser.add_argument('--step_size', type = int, default = 20)
     parser.add_argument('--model_name', default = '42')
-    parser.add_argument('--batch_size', type = int,default = batch_size)
-    parser.add_argument('--points_taken', type = int, default = points_taken)
-    parser.add_argument('--grid_size', type = int, default = grid_size)
+    parser.add_argument('--batch_size', type = int,default = 8)
+    parser.add_argument('--points_taken', type = int, default = 4096)
+    parser.add_argument('--grid_size', type = int, default = 25)
     parser.add_argument('--model', type = str, default = 'pointnet2')
     parser.add_argument('--radius', type = int, default = 1)
+    parser.add_argument('--embd', type = int, default = 64)
 
 
     args = parser.parse_args()
@@ -123,10 +111,8 @@ if __name__ == '__main__':
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size = args.step_size, gamma = 0.9)
     model = model.to(device)
 
-
-
     print("Running Epochs")
-    print(f'{device = }, {args.grid_size = }, {args.points_taken = }, {args.epoch = }, {n_embd = }, {args.batch_size = }, {args.lr = }, {args.step_size = }, {args.radius}')
+    print(f'{device = }, {args.grid_size = }, {args.points_taken = }, {args.epoch = }, {args.embd = }, {args.batch_size = }, {args.lr = }, {args.step_size = }, {args.radius = }')
     for _epoch in range(1, args.epoch+1): 
         train_loss, train_acc, bal_avg_acc = train_loop(train_loader)
         scheduler.step()
@@ -138,7 +124,7 @@ if __name__ == '__main__':
 
     print(f'Total_time: {end-start}')
 
-    if not os.path.exists(os.path.join("model", "best")):
-        os.makedirs(os.path.join("model", "best"))
-    torch.save(model.state_dict(), os.path.join("model", "best", f"{args.model}_{args.grid_size}_{args.points_taken}_{args.model_name}.pt"))
+    if not os.path.exists(os.path.join(f"{args.model}","checkpoints")):
+        os.makedirs(os.path.join(f"{args.model}","checkpoints"))
+    torch.save(model.state_dict(), os.path.join(f"{args.model}", "checkpoints", f"{args.model}_{args.grid_size}_{args.points_taken}_{args.model_name}.pt"))
     print(f"Model Saved at {args.epoch} epochs, named: {args.model}_{args.grid_size}_{args.points_taken}_{args.model_name}.pt")

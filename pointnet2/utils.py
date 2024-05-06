@@ -24,7 +24,6 @@ class Local_op(nn.Module):
         x = x.reshape(b, n, -1).permute(0, 2, 1)
         return x
     
-    
 def square_distance(src, dst):
     """
     Calculate Euclid distance between each two points.
@@ -54,7 +53,6 @@ def index_points(points, idx):
     res = torch.gather(points, 1, idx[..., None].expand(-1, -1, points.size(-1)))
     return res.reshape(*raw_size, -1)
 
-
 def farthest_point_sample(xyz, npoint):
     """
     Input:
@@ -76,7 +74,6 @@ def farthest_point_sample(xyz, npoint):
         distance = torch.min(distance, dist)
         farthest = torch.max(distance, -1)[1]
     return centroids
-
 
 def query_ball_point(radius, nsample, xyz, new_xyz):
     """
@@ -237,7 +234,6 @@ class PointNetFeaturePropagation(nn.Module):
                 new_points = self.mlp_drp[i](new_points)
 
         return new_points
-
 
 if __name__ == "__main__":
     a = torch.rand(2, 400, 10) # B, C, N

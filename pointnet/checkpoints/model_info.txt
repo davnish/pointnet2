@@ -1,0 +1,3 @@
+pointnet_25_4096_2  : 600 epochs, model is overfitted
+pointnet_25_4096_3  : 200 epochs, step_size reduced from 100 to 50 gave bad results
+ 

@@ -1,24 +1,11 @@
 import torch
 from torch.utils.data import Dataset
-import pandas as pd
-from pointnet_util import farthest_point_sample, index_points
 import os
 import numpy as np
 import laspy
-import h5py
 import glob
+from pointnet2 import farthest_point_sample, index_points
 torch.manual_seed(42)
-
-class modelnet40(Dataset):
-    def __init__(self):
-        with h5py.File(os.path.join("data", "modelnet40_ply_hdf5_2048", "ply_data_train0.h5")) as F:
-            self.data, self.label = F['data'][()], F['label'][()]
-    
-    def __getitem__(self, idx):
-        return self.data[idx], self.label[idx]
-    
-    def __len__(self):
-        return self.data.shape[0]
 
 class Dales(Dataset):
     def __init__(self, device, grid_size, points_taken, partition='train', not_norm=False):
@@ -50,6 +37,7 @@ class Dales(Dataset):
             mn = np.min(self.data, axis = 1, keepdims=True)
             mx = np.max(self.data, axis = 1, keepdims=True)
             self.data = (self.data - mn)/(mx - mn)
+            
             np.savez(os.path.join("data", "Dales", f"{partition}", f"norm_{grid_size}_{points_taken}.npz"), x = self.data, y = self.label)
 
     def __getitem__(self, item):
