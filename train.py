@@ -81,7 +81,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', type = str, default = 'pointnet2')
     parser.add_argument('--radius', type = int, default = 1)
     parser.add_argument('--eval', type = int, default = 1)
-    parser.add_argument('--embd', type = int, default = 64)
+    parser.add_argument('--embd', type = float, default = 64)
 
     args = parser.parse_args()
 
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     model = model.to(device)
 
     print("Running Epochs")
-    print(f'{device = }, {args.grid_size = }, {args.points_taken = }, {args.epoch = }, {args.embd = }, {args.batch_size = }, {args.lr = }, {args.step_size = }')
+    print(f'{device = }, {args.grid_size = }, {args.points_taken = }, {args.epoch = }, {args.embd = }, {args.batch_size = }, {args.lr = }, {args.step_size = }, {args.dp = }')
 
     df = {'train_loss': [], 'train_acc': [], 'val_loss': [], 'val_acc': []}
     for _epoch in range(1, args.epoch+1): 
