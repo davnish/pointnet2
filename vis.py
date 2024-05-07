@@ -3,10 +3,12 @@ import open3d as o3d
 import laspy 
 import os 
 import torch
-from model import PointTransformerSeg
+from pointnet import PointnetSeg
+from pointnet2 import Pointnet2Seg
 from dataset import Dales
+import torch.nn as nn
 from torch.utils.data import DataLoader
-from main import test_loop
+from train import test_loop
 from sklearn.metrics import classification_report
 np.random.seed(42)
 
@@ -23,16 +25,15 @@ def visualize(data, label):
     pcd.colors = o3d.utility.Vector3dVector(color)
 
     return pcd
-import torch.nn as nn
 
 def visualize_model(model_name):
     loader = DataLoader(Dales('cuda', 25, 4096, partition='test',not_norm=True), batch_size = 8)
     tiles = np.load(os.path.join("data", "Dales" , 'test', f"not_norm_25_4096.npz"))
     data = tiles['x'].reshape(-1, 3)
     label = tiles['y'].reshape(-1)
-    model = PointTransformerSeg().to('cuda')
+    model = Pointnet2Seg().to('cuda')
 
-    model.load_state_dict(torch.load(os.path.join("model", "checkpoint", f"{model_name}.pt")))
+    model.load_state_dict(torch.load(os.path.join("models", "best", f"{model_name}.pt")))
     loss_fn = nn.CrossEntropyLoss()
     _,acc,bal_acc,preds = test_loop(loader, loss_fn, model, 'cuda')
     print(f'{acc=}')
@@ -44,10 +45,27 @@ def visualize_model(model_name):
 
     return pcd
 
+if __name__ == "__main__":
 
-pcd = visualize_model(11)
+    pcd = visualize_model('pointnet2_25_4096_3')
 
-o3d.visualization.draw_geometries([pcd])
+    o3d.visualization.draw_geometries([pcd])
+
+
+    # label = tiles['y']
+    # import glob
+    # for fl in glob.glob(os.path.join("data", "Dales", "test","*.las")):
+    #     las = laspy.read(fl)
+
+
+    # gt_mesh = o3d.io.read_triangle_mesh()
+    # gt_mesh.points = o3d.utility.Vector3dVector(las.xyz)
+    # gt_mesh.estimate_normals()
+    # gt_mesh.compute_vertex_normals()
+
+    # pcd = gt_mesh.sample_points_poisson_disk(3000)
+    # o3d.visualization.draw_geometries([pcd])
+    # print(data)
 
 
 
