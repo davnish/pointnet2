@@ -50,7 +50,7 @@ class PointnetCls(nn.Module):
         return x
     
 class PointnetSeg(nn.Module):
-    def __init__(self, n_embd=64, dropout=0.2):
+    def __init__(self, n_embd=64, dropout=0.5):
         super(PointnetSeg, self).__init__()
         self.dp = dropout
         self.conv1 = nn.Conv1d(3, 64, kernel_size=1)

@@ -83,9 +83,7 @@ if __name__ == '__main__':
     parser.add_argument('--eval', type = int, default = 1)
     parser.add_argument('--embd', type = int, default = 64)
 
-
     args = parser.parse_args()
-
 
     # Setting Device
     device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
@@ -109,7 +107,7 @@ if __name__ == '__main__':
 
     # loss, Optimizer, Scheduler
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr = args.lr, weight_decay=0.0025)
+    optimizer = torch.optim.Adam(model.parameters(), lr = args.lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size = args.step_size, gamma = 0.9)
     model = model.to(device)
 

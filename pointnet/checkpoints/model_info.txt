@@ -1,3 +1,14 @@
-pointnet_25_4096_2  : 600 epochs, model is overfitted
-pointnet_25_4096_3  : 200 epochs, step_size reduced from 100 to 50 gave bad results
+- pointnet_25_4096_1 : 400 epochs, model is overfitted
+    train_loss: 0.3405 | train_acc: 0.8752 | bal_train_acc: 0.4331
+    val_loss: 0.6007 | val_acc: 0.7705 | bal_val_acc: 0.3307
+
+- pointnet_25_4096_2 : 200 epochs, model is overfitted and didn't generalized well, weight_decay = 0.0025
+    train_loss: 0.5927 | train_acc: 0.7624 | bal_train_acc: 0.3105
+    val_loss: 0.7561 | val_acc: 0.6894 | bal_val_acc: 0.2593
+
+- pointnet_25_4096_3 : 200 epochs, removed weight_decay, lr=0.0008
+    train_loss: 0.5895 | train_acc: 0.7623 | bal_train_acc: 0.3414
+    val_loss: 0.7196 | val_acc: 0.7053 | bal_val_acc: 0.2662
+
+- 
  
