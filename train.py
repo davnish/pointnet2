@@ -8,6 +8,8 @@ import argparse
 import os
 from pointnet2 import Pointnet2Seg
 from pointnet import PointnetSeg
+import matplotlib.pyplot as plt
+import pandas as pd
 torch.manual_seed(42)
 
 #Training the model
@@ -67,7 +69,6 @@ def test_loop(loader, loss_fn, model, device):
 
 if __name__ == '__main__':
 
-    eval_train_test = 10
     batch_eval_inter = 100
     parser = argparse.ArgumentParser()
     parser.add_argument('--lr', type = float, default= 1e-4)
@@ -79,6 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('--grid_size', type = int, default = 25)
     parser.add_argument('--model', type = str, default = 'pointnet2')
     parser.add_argument('--radius', type = int, default = 1)
+    parser.add_argument('--eval', type = int, default = 1)
     parser.add_argument('--embd', type = int, default = 64)
 
 
@@ -107,23 +109,32 @@ if __name__ == '__main__':
 
     # loss, Optimizer, Scheduler
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr = args.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr = args.lr, weight_decay=0.0025)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size = args.step_size, gamma = 0.9)
     model = model.to(device)
 
     print("Running Epochs")
-    print(f'{device = }, {args.grid_size = }, {args.points_taken = }, {args.epoch = }, {args.embd = }, {args.batch_size = }, {args.lr = }, {args.step_size = }, {args.radius = }')
+    print(f'{device = }, {args.grid_size = }, {args.points_taken = }, {args.epoch = }, {args.embd = }, {args.batch_size = }, {args.lr = }, {args.step_size = }')
+
+    df = {'train_loss': [], 'train_acc': [], 'val_loss': [], 'val_acc': []}
     for _epoch in range(1, args.epoch+1): 
         train_loss, train_acc, bal_avg_acc = train_loop(train_loader)
         scheduler.step()
-        if _epoch%eval_train_test==0:
+        if _epoch%args.eval==0:
             val_loss, val_acc, bal_val_acc, _ = test_loop(test_loader, loss_fn, model, device)
             print(f'Epoch {_epoch} | lr: {scheduler.get_last_lr()}:\n train_loss: {train_loss:.4f} | train_acc: {train_acc:.4f} | bal_train_acc: {bal_avg_acc:.4f}\n val_loss: {val_loss:.4f} | val_acc: {val_acc:.4f} | bal_val_acc: {bal_val_acc:.4f}')
-        
+            df['train_loss'].append(train_loss)
+            df['train_acc'].append(train_acc)
+            df['val_loss'].append(val_loss)
+            df['val_acc'].append(val_acc)
     end = time.time()
-
     print(f'Total_time: {end-start}')
 
+    df = pd.DataFrame(df)
+    fig, ax = plt.subplots(1,2)
+    df[['train_loss', 'val_loss']].plot(ax=ax[0])
+    df[['train_acc', 'val_acc']].plot(ax=ax[1])
+    plt.show()
     if not os.path.exists(os.path.join(f"{args.model}","checkpoints")):
         os.makedirs(os.path.join(f"{args.model}","checkpoints"))
     torch.save(model.state_dict(), os.path.join(f"{args.model}", "checkpoints", f"{args.model}_{args.grid_size}_{args.points_taken}_{args.model_name}.pt"))
