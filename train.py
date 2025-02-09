@@ -87,7 +87,9 @@ if __name__ == '__main__':
     parser.add_argument('--model', type = str, default = 'pointnet')
     parser.add_argument('--radius', type = int, default = 1)
     parser.add_argument('--embd', type = int, default = 64)
-    parser.add_argument('--load_ckpt', type = bool, default = False)
+    parser.add_argument('--dp', type = float, default = 0.3)
+    parser.add_argument('--weight_decay', type = float, default = 0.9)
+    parser.add_argument('--load_ckpt', type = bool, default = True)
 
 
     args = parser.parse_args()
@@ -116,11 +118,11 @@ if __name__ == '__main__':
     # Initialize the model
     model = {'pointnet2': Pointnet2Seg, 'pointnet': PointnetSeg}
 
-    model =  model[args.model]() if args.model == 'pointnet' else model[args.model](radius = args.radius)
+    model =  model[args.model](dropout = args.dp) if args.model == 'pointnet' else model[args.model](radius = args.radius)
 
     # loss, Optimizer, Scheduler
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=0.9) # added weight decay
+    optimizer = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=args.weight_decay) # added weight decay
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size = args.step_size, gamma = 0.9)
     model = model.to(device)
 
