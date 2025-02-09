@@ -23,7 +23,7 @@ class Dales(Dataset):
             for fl in glob.glob(os.path.join("data", "Dales", f"{partition}","*.las")):
                 las = laspy.read(fl)
                 las_classification = las_label_replace(las)
-                data, label = grid_als(device, grid_size, points_taken, las.xyz, las_classification)
+                data, label = grid_als("cpu", grid_size, points_taken, las.xyz, las_classification)
 
                 if self.data is None and self.label is None:
                     self.data = data
@@ -58,6 +58,8 @@ def las_label_replace(las):
     return las_classification
 
 def grid_als(device, grid_size, points_taken, data, classification):
+
+
     grid_point_clouds = {}
     grid_point_clouds_label = {}
     for point, label in zip(data, classification):
@@ -128,7 +130,7 @@ class tald(Dataset):
 
             for i in glob.glob(os.path.join(path, '*.csv')):
                 data_xyz, cls = self.read_csv(i)
-                data, label = grid_als(device, grid_size, points_taken, data_xyz, cls)
+                data, label = grid_als("cpu", grid_size, points_taken, data_xyz, cls)
 
                 if self.data is None and self.label is None:
                     self.data = data

@@ -9,10 +9,12 @@ import os
 from pointnet2 import Pointnet2Seg
 from pointnet import PointnetSeg
 from tqdm import tqdm
+import glob
+
 torch.manual_seed(42)
 
 #Training the model
-def train_loop(loader, see_batch_loss = False):
+def train_loop(loader):
     model.train()
     total_loss = 0
     y_true = []
@@ -66,13 +68,17 @@ def test_loop(loader, loss_fn, model, device):
     # print(f'val_loss: {total_loss/len(test_loader)}, val_acc: {accuracy_score(y_true, y_preds)}')  
     return total_loss/len(loader), accuracy_score(y_true, y_preds), balanced_accuracy_score(y_true, y_preds), y_preds
 
+def get_recent_epoch(path):
+    files = sorted([int(os.path.splitext(os.path.basename(i))[0]) for i in glob.glob(os.path.join(path, '*.pt'))])
+    return 0 if len(files) == 0 else files[-1]
+
 if __name__ == '__main__':
 
     eval_train_test = 1
     # batch_eval_inter = 100
     parser = argparse.ArgumentParser()
     parser.add_argument('--lr', type = float, default= 1e-4)
-    parser.add_argument('--epoch', type = int, default = 100)
+    parser.add_argument('--epoch', type = int, default = 1)
     parser.add_argument('--step_size', type = int, default = 20)
     parser.add_argument('--model_name', default = '42')
     parser.add_argument('--batch_size', type = int,default = 8)
@@ -81,6 +87,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', type = str, default = 'pointnet')
     parser.add_argument('--radius', type = int, default = 1)
     parser.add_argument('--embd', type = int, default = 64)
+    parser.add_argument('--load_ckpt', type = bool, default = False)
 
 
     args = parser.parse_args()
@@ -117,6 +124,25 @@ if __name__ == '__main__':
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size = args.step_size, gamma = 0.9)
     model = model.to(device)
 
+    model_ckpt_path = os.path.join(f"{args.model}","checkpoints", f"{args.model_name}")
+
+    if not os.path.exists(model_ckpt_path):
+        os.makedirs(model_ckpt_path)
+
+    try:
+        if args.load_ckpt:
+            ckpt_name = f"{get_recent_epoch(model_ckpt_path)}.pt"
+            print(f"Loading: {ckpt_name}")
+            checkpoint = torch.load(os.path.join(model_ckpt_path, ckpt_name))
+            model.load_state_dict(checkpoint)
+            # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            print('Checkpoint Loaded')
+    except Exception as e:
+        print(e)
+        ans = input('Do you want to continue without loading checkpoint (y/n):')
+        if ans == 'n':
+            quit()
+
     print("Running Epochs")
     print(f'{device = }, {args.grid_size = }, {args.points_taken = }, {args.epoch = }, {args.embd = }, {args.batch_size = }, {args.lr = }, {args.step_size = }, {args.radius = }')
     for _epoch in range(1, args.epoch+1): 
@@ -129,8 +155,6 @@ if __name__ == '__main__':
     end = time.time()
 
     print(f'Total_time: {end-start}')
-
-    if not os.path.exists(os.path.join(f"{args.model}","checkpoints")):
-        os.makedirs(os.path.join(f"{args.model}","checkpoints"))
-    torch.save(model.state_dict(), os.path.join(f"{args.model}", "checkpoints", f"{args.model}_{args.grid_size}_{args.points_taken}_{args.model_name}.pt"))
-    print(f"Model Saved at {args.epoch} epochs, named: {args.model}_{args.grid_size}_{args.points_taken}_{args.model_name}.pt")
+    curr_model = get_recent_epoch(model_ckpt_path)+args.epoch
+    torch.save(model.state_dict(), os.path.join(model_ckpt_path, f"{curr_model}.pt"))
+    print(f"Model Saved at {args.epoch} epochs, named: {curr_model}.pt")
