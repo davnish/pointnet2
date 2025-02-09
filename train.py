@@ -1,13 +1,14 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
-from dataset import Dales
+from dataset import tald
 import time
 from sklearn.metrics import accuracy_score, balanced_accuracy_score
 import argparse
 import os
 from pointnet2 import Pointnet2Seg
 from pointnet import PointnetSeg
+from tqdm import tqdm
 torch.manual_seed(42)
 
 #Training the model
@@ -16,7 +17,7 @@ def train_loop(loader, see_batch_loss = False):
     total_loss = 0
     y_true = []
     y_preds = []
-    for batch, (data, label) in enumerate(loader):
+    for (data, label) in tqdm(loader):
         data, label = data.to(device), label.to(device).squeeze()
 
         logits = model(data)
@@ -35,9 +36,9 @@ def train_loop(loader, see_batch_loss = False):
         y_true.extend(label.view(-1).cpu().tolist())
         y_preds.extend(preds.detach().cpu().tolist())
         
-        if see_batch_loss:
-            if batch%batch_eval_inter == 0:
-                print(f'Batch_Loss_{batch} : {loss.item()}')
+        # if see_batch_loss:
+        #     if batch%batch_eval_inter == 0:
+        #         print(f'Batch_Loss_{batch} : {loss.item()}')
 
     return total_loss/len(loader), accuracy_score(y_true, y_preds), balanced_accuracy_score(y_true, y_preds)
         
@@ -67,8 +68,8 @@ def test_loop(loader, loss_fn, model, device):
 
 if __name__ == '__main__':
 
-    eval_train_test = 10
-    batch_eval_inter = 100
+    eval_train_test = 1
+    # batch_eval_inter = 100
     parser = argparse.ArgumentParser()
     parser.add_argument('--lr', type = float, default= 1e-4)
     parser.add_argument('--epoch', type = int, default = 100)
@@ -77,7 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type = int,default = 8)
     parser.add_argument('--points_taken', type = int, default = 4096)
     parser.add_argument('--grid_size', type = int, default = 25)
-    parser.add_argument('--model', type = str, default = 'pointnet2')
+    parser.add_argument('--model', type = str, default = 'pointnet')
     parser.add_argument('--radius', type = int, default = 1)
     parser.add_argument('--embd', type = int, default = 64)
 
@@ -87,14 +88,19 @@ if __name__ == '__main__':
 
     # Setting Device
     device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
+    # device = 'cpu'
 
     # Starting timer
     start = time.time()
 
     # Splitting the data
-    _dales = Dales(device, args.grid_size, args.points_taken, partition='train')
+    # _dales = Dales(device, args.grid_size, args.points_taken, partition='train')
+    train_dataset = tald(device, args.grid_size, args.points_taken, partition = 'train')
+    test_dataset = tald(device, args.grid_size, args.points_taken, partition = 'test')
+
+
     print("File Read Complete")
-    train_dataset, test_dataset = random_split(_dales, [0.7, 0.3])
+    # train_dataset, test_dataset = random_split(_dales, [0.7, 0.3])
 
     # Loading the data
     train_loader = DataLoader(train_dataset, batch_size = args.batch_size, shuffle = True, drop_last=True)
@@ -107,7 +113,7 @@ if __name__ == '__main__':
 
     # loss, Optimizer, Scheduler
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr = args.lr)
+    optimizer = torch.optim.AdamW(model.parameters(), lr = args.lr, weight_decay=0.9) # added weight decay
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size = args.step_size, gamma = 0.9)
     model = model.to(device)
 

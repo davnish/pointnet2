@@ -1,6 +1,17 @@
-data/
-tempCodeRunnerFile.py
-__pycache__/
-.DS_Store
-attention_sample.py
-*.pt
+*
+# !data/
+# !tempCodeRunnerFile.py
+# !__pycache__/
+# !.DS_Store
+# !attention_sample.py
+
+# !*.pt
+
+!pointnet
+!pointnet2
+
+!README.md
+!train.py
+!train.sh
+
+!

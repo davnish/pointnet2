@@ -2,9 +2,10 @@ import torch
 from torch.utils.data import Dataset
 import os
 import numpy as np
-import laspy
+# import laspy
 import glob
 from pointnet2 import farthest_point_sample, index_points
+import pandas as pd
 torch.manual_seed(42)
 
 class Dales(Dataset):
@@ -84,8 +85,8 @@ def grid_als(device, grid_size, points_taken, data, classification):
 
         if(len_grid>min_grid_points): # This is for excluding points which are at the boundry at the edges of the tiles
 
-            grid = np.asarray(grid)
-            label = np.asarray(label)
+            # grid = np.asarray(grid)
+            # label = np.asarray(label)
 
             if(len_grid<points_taken): # This is for if the points in the grid are less then the required points for making the grid 
                 for _ in range(points_taken-len_grid):
@@ -93,8 +94,8 @@ def grid_als(device, grid_size, points_taken, data, classification):
                     label.append(label[0])
 
             
-            grid = torch.tensor(grid).unsqueeze(0).to(device)
-            label = torch.tensor(label).unsqueeze(0).unsqueeze(2).to(device)
+            grid = torch.tensor(np.asarray(grid)).unsqueeze(0).to(device)
+            label = torch.tensor(np.asarray(label)).unsqueeze(0).unsqueeze(2).to(device)
 
             tiles_idx = farthest_point_sample(grid, points_taken) # using fps
 
@@ -107,6 +108,67 @@ def grid_als(device, grid_size, points_taken, data, classification):
     return tiles_np, tiles_np_labels
 
 
+class tald(Dataset):
+    def __init__(self, device, grid_size, points_taken, partition='train', not_norm=False):
+
+        path = os.path.join('data_tald', f'{partition}')
+
+        # if normalized tald exists, read it.
+        norm_path = os.path.join(path, 'norm')
+
+
+        if os.path.exists(norm_path):
+            filename = f'norm_{grid_size}_{points_taken}.npz'
+            tiles = np.load(os.path.join(norm_path, filename))
+            self.data = tiles['x']
+            self.label = tiles['y']
+        else:
+            self.data = None
+            self.label = None
+
+            for i in glob.glob(os.path.join(path, '*.csv')):
+                data_xyz, cls = self.read_csv(i)
+                data, label = grid_als(device, grid_size, points_taken, data_xyz, cls)
+
+                if self.data is None and self.label is None:
+                    self.data = data
+                    self.label = label
+                else:
+                    self.data = np.append(self.data, data, axis = 0)
+                    self.label = np.append(self.label, label, axis = 0)
+
+            if not_norm:
+                # self
+                not_norm_path = os.path.join(path, 'not_norm')
+                if not os.path.exists(not_norm_path):
+                    os.mkdir(not_norm_path)
+
+                np.savez(os.path.join(not_norm_path, f'not_norm_{grid_size}_{points_taken}'), x = self.data, y = self.label)
+            
+            mn = np.min(self.data, axis = 1, keepdims=True)
+            mx = np.max(self.data, axis = 1, keepdims=True)
+            self.data = (self.data - mn)/(mx - mn)
+
+            os.mkdir(norm_path)
+            np.savez(os.path.join(norm_path, f"norm_{grid_size}_{points_taken}.npz"), x = self.data, y = self.label)
+
+    def read_csv(self, csv_path):
+        df = pd.read_csv(csv_path, usecols=['X', 'Y', 'Z', 'Classification'])
+        data = df.loc[:, ['X', 'Y', 'Z']]
+        label = df['Classification'] - 2
+        return data.to_numpy(), label.to_numpy()
+
+    def __getitem__(self, index):
+        pointcloud = torch.tensor(self.data[index]).float()
+        label = torch.tensor(self.label[index])
+
+        return pointcloud, label
+    
+    def __len__(self):
+        return self.data.shape[0]
+
+
 if __name__ == '__main__':
-    train = Dales('cuda', 25, 4096)
-    pass
+    # train = Dales('cuda', 25, 4096)
+    train = tald('cpu', 25, 4096, not_norm=True, partition='test')
+

@@ -61,7 +61,7 @@ class PointnetSeg(nn.Module):
         self.conv5 = nn.Conv1d(512, 256, kernel_size=1)
         self.conv6 = nn.Conv1d(256, 128, kernel_size=1)
 
-        self.output = nn.Conv1d(128, 8, kernel_size=1) # This 8 is for Dales
+        self.output = nn.Conv1d(128, 4, kernel_size=1) # changed for tald
 
         self.t1 = T1(dropout)
         self.t2 = T2(dropout)
